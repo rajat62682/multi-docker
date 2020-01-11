@@ -1,0 +1,23 @@
+langauge: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+    - docker build -t dockrajat/react-test -f ./client/Dockerfile.dev ./client
+  
+script:
+    - docker run -e CI=true dockrajat/react-test npm test
+
+after_success:
+    - docker build -t dockrajat/multi-client ./client
+    - docker build -t dockrajat/multi-nginx ./nginx
+    - docker build -t dockrajat/multi-server ./server
+    - docker build -t dockrajat/multi-worker ./worker
+    #login to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those images and push them to docker hub
+    - docker push dockrajat/multi-client
+    - docker push dockrajat/multi-nginx
+    - docker push dockrajat/multi-server
+    - docker push dockrajat/multi-worker
